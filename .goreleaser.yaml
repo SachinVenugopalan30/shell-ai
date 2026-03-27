@@ -30,6 +30,6 @@ checksum:
 release:
   github:
     owner: SachinVenugopalan30
-    name: shellai
+    name: shell-ai
   draft: false
   prerelease: auto
