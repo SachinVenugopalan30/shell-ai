@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/SachinVenugopalan30/shellai/internal/config"
+	"github.com/SachinVenugopalan30/shell-ai/internal/config"
 )
 
 var setCmd = &cobra.Command{

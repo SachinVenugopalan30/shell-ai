@@ -1,4 +1,4 @@
-module github.com/SachinVenugopalan30/shellai
+module github.com/SachinVenugopalan30/shell-ai
 
 go 1.26.1
 

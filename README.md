@@ -25,14 +25,14 @@ No data leaves your machine — shellai runs entirely against a local model via 
 ### Option 1 — go install
 
 ```bash
-go install github.com/SachinVenugopalan30/shellai@latest
+go install github.com/SachinVenugopalan30/shell-ai@latest
 ```
 
 The binary lands in `$GOPATH/bin` (usually `~/go/bin`). Make sure that's on your `$PATH`.
 
 ### Option 2 — pre-built binary
 
-Download the latest release for your OS and architecture from [GitHub Releases](https://github.com/SachinVenugopalan30/shellai/releases), then move the binary to somewhere on your `$PATH`:
+Download the latest release for your OS and architecture from [GitHub Releases](https://github.com/SachinVenugopalan30/shell-ai/releases), then move the binary to somewhere on your `$PATH`:
 
 ```bash
 # example for macOS arm64

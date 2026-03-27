@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/SachinVenugopalan30/shellai/internal/config"
-	"github.com/SachinVenugopalan30/shellai/internal/prompt"
-	"github.com/SachinVenugopalan30/shellai/internal/provider"
+	"github.com/SachinVenugopalan30/shell-ai/internal/config"
+	"github.com/SachinVenugopalan30/shell-ai/internal/prompt"
+	"github.com/SachinVenugopalan30/shell-ai/internal/provider"
 )
 
 var explainCmd = &cobra.Command{

@@ -7,8 +7,8 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
-	"github.com/SachinVenugopalan30/shellai/internal/config"
-	"github.com/SachinVenugopalan30/shellai/internal/history"
+	"github.com/SachinVenugopalan30/shell-ai/internal/config"
+	"github.com/SachinVenugopalan30/shell-ai/internal/history"
 )
 
 var clearCmd = &cobra.Command{

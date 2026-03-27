@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/SachinVenugopalan30/shellai/cmd"
+	"github.com/SachinVenugopalan30/shell-ai/cmd"
 )
 
 // version is injected at build time via -ldflags "-X main.version=vX.Y.Z"

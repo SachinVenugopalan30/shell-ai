@@ -6,8 +6,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/SachinVenugopalan30/shellai/internal/context"
-	"github.com/SachinVenugopalan30/shellai/internal/provider"
+	"github.com/SachinVenugopalan30/shell-ai/internal/context"
+	"github.com/SachinVenugopalan30/shell-ai/internal/provider"
 )
 
 type LLMResponse struct {

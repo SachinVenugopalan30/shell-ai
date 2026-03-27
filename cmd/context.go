@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ctx "github.com/SachinVenugopalan30/shellai/internal/context"
+	ctx "github.com/SachinVenugopalan30/shell-ai/internal/context"
 )
 
 var contextCmd = &cobra.Command{

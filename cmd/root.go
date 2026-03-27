@@ -11,14 +11,14 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
-	"github.com/SachinVenugopalan30/shellai/internal/config"
-	ctx "github.com/SachinVenugopalan30/shellai/internal/context"
-	"github.com/SachinVenugopalan30/shellai/internal/executor"
-	"github.com/SachinVenugopalan30/shellai/internal/history"
-	"github.com/SachinVenugopalan30/shellai/internal/prompt"
-	"github.com/SachinVenugopalan30/shellai/internal/provider"
-	"github.com/SachinVenugopalan30/shellai/internal/safety"
-	"github.com/SachinVenugopalan30/shellai/internal/spinner"
+	"github.com/SachinVenugopalan30/shell-ai/internal/config"
+	ctx "github.com/SachinVenugopalan30/shell-ai/internal/context"
+	"github.com/SachinVenugopalan30/shell-ai/internal/executor"
+	"github.com/SachinVenugopalan30/shell-ai/internal/history"
+	"github.com/SachinVenugopalan30/shell-ai/internal/prompt"
+	"github.com/SachinVenugopalan30/shell-ai/internal/provider"
+	"github.com/SachinVenugopalan30/shell-ai/internal/safety"
+	"github.com/SachinVenugopalan30/shell-ai/internal/spinner"
 )
 
 var (

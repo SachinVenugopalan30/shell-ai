@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/SachinVenugopalan30/shellai/internal/config"
+	"github.com/SachinVenugopalan30/shell-ai/internal/config"
 )
 
 type Message struct {
