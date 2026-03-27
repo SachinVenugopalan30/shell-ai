@@ -25,7 +25,7 @@ No data leaves your machine — shellai runs entirely against a local model via 
 ### Option 1 — go install
 
 ```bash
-go install github.com/SachinVenugopalan30/shell-ai@latest
+go install github.com/SachinVenugopalan30/shell-ai/cmd/shellai@latest
 ```
 
 The binary lands in `$GOPATH/bin` (usually `~/go/bin`). Make sure that's on your `$PATH`.
