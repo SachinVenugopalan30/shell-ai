@@ -59,7 +59,7 @@ func BuildExplainMessages(command string) []provider.Message {
 
 func ParseResponse(raw string) *LLMResponse {
 	raw = strings.TrimSpace(raw)
-	cleaned := stripFences(raw)
+	cleaned := fixEscapes(stripFences(raw))
 
 	var parsed struct {
 		Command string `json:"command"`
@@ -89,4 +89,22 @@ func stripFences(s string) string {
 	s = strings.TrimPrefix(s, "```")
 	s = strings.TrimSuffix(s, "```")
 	return strings.TrimSpace(s)
+}
+
+// fixEscapes drops invalid JSON escape sequences (e.g. \$ from awk commands)
+func fixEscapes(s string) string {
+	var out strings.Builder
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\\' && i+1 < len(s) {
+			switch s[i+1] {
+			case '"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u':
+				out.WriteByte(s[i])
+			default:
+				// invalid escape — drop the backslash, keep the character
+			}
+		} else {
+			out.WriteByte(s[i])
+		}
+	}
+	return out.String()
 }
