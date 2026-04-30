@@ -63,6 +63,18 @@ func run(cmd *cobra.Command, args []string) error {
 		cfg.Model = flagModel
 	}
 
+	// cache lookup — skip LLM if a recent similar intent matches
+	if hit, ok := findCachedMatch(intent, cfg.CacheTTL); ok {
+		used, err := tryCacheHit(intent, hit)
+		if err != nil {
+			return err
+		}
+		if used {
+			return nil
+		}
+		// user chose "Send to LLM again" — fall through to normal flow
+	}
+
 	// connect to provider
 	p, err := provider.New(cfg)
 	if err != nil {
@@ -133,20 +145,24 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// execute with a 30s timeout to prevent runaway commands
+	runCommand(env, res.Command, intent, res.Reason)
+	return nil
+}
+
+// runCommand executes a shell command with a timeout, logs to history, and warns on real errors.
+func runCommand(env *ctx.EnvContext, command, intent, reason string) {
 	execCtx, execCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer execCancel()
-	result, _ := executor.Run(execCtx, res.Command, env.Shell)
+	result, _ := executor.Run(execCtx, command, env.Shell)
 	if execCtx.Err() == context.DeadlineExceeded {
 		fmt.Fprintln(os.Stderr, "Command timed out after 30s and was stopped.")
 	}
 
-	// log to history
 	history.Append(history.DefaultPath(), history.Entry{
 		Timestamp: time.Now().UTC(),
 		Intent:    intent,
-		Command:   res.Command,
-		Reason:    res.Reason,
+		Command:   command,
+		Reason:    reason,
 		ExitCode:  result.ExitCode,
 		Executed:  true,
 	})
@@ -155,8 +171,57 @@ func run(cmd *cobra.Command, args []string) error {
 	if result.ExitCode > 1 {
 		fmt.Fprintf(os.Stderr, "Command exited with code %d\n", result.ExitCode)
 	}
+}
 
-	return nil
+// tryCacheHit displays a cached match, prompts the user, and runs it if approved.
+// Returns (used=true) if the cached command ran or the user aborted (no LLM needed).
+// Returns (used=false) if the user wants to send to LLM again.
+func tryCacheHit(intent string, hit *history.Entry) (bool, error) {
+	env, err := ctx.Detect()
+	if err != nil {
+		return false, err
+	}
+	check := safety.Check(hit.Command, env.PackageManager)
+
+	if check.PkgManagerMismatch {
+		color.Yellow("⚠  Note: %s", check.MismatchDetail)
+	}
+	if check.IsDestructive {
+		color.Red("WARNING: potentially destructive command (%s)", check.DestructiveReason)
+	}
+
+	age := time.Since(hit.Timestamp).Round(time.Minute)
+	color.Cyan("\n  Found a recent similar request:")
+	fmt.Printf("  You asked: %s  (%s ago)\n", hit.Intent, age)
+	fmt.Printf("  Command:   %s\n", hit.Command)
+	if hit.Reason != "" {
+		fmt.Printf("  Reason:    %s\n\n", hit.Reason)
+	} else {
+		fmt.Println()
+	}
+
+	runLabel := "Run cached command"
+	if check.IsDestructive {
+		runLabel = "Yes, run cached (destructive)"
+	}
+	items := []string{runLabel, "Send to LLM again", "Abort"}
+	sel := promptui.Select{Label: "What would you like to do?", Items: items}
+	i, _, err := sel.Run()
+	if err != nil {
+		fmt.Println("Aborted.")
+		return true, nil
+	}
+
+	switch i {
+	case 0:
+		runCommand(env, hit.Command, intent, hit.Reason)
+		return true, nil
+	case 1:
+		return false, nil
+	default:
+		fmt.Println("Aborted.")
+		return true, nil
+	}
 }
 
 // isRiskyForAutoConfirm returns true for commands that should always prompt even with -y

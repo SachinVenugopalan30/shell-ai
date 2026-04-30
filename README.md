@@ -83,6 +83,7 @@ shellai will display the generated command and a short reason, then ask you to c
 | Flag | Description |
 |------|-------------|
 | `-y, --yes` | Auto-confirm non-destructive, non-risky commands |
+| `-v, --version` | Print version info and exit |
 | `--model` | Override the model for this run |
 | `--provider` | Override the provider (`ollama` or `llamacpp`) |
 | `--endpoint` | Override the API endpoint URL |
@@ -99,12 +100,14 @@ Config is stored at `~/.config/shellai/config.yaml`. Run `shellai set` to config
 | `endpoint` | `http://localhost:11434` | Provider API URL |
 | `model` | _(first available)_ | Model name to use |
 | `timeout` | `60s` | Request timeout |
+| `cache_ttl` | `30m` | How long a past command stays eligible for cache reuse |
 
 **Example:**
 ```bash
 shellai set provider ollama
 shellai set model llama3.2
 shellai set endpoint http://localhost:11434
+shellai set cache_ttl 30m
 ```
 
 ---
@@ -139,14 +142,58 @@ shellai --model llama3.1:70b "optimise this directory's git history"
 
 ---
 
+## Recent-Command Cache
+
+If you ask for something similar to what you ran a few minutes ago, shellai skips the LLM call and offers the prior command back:
+
+```
+Found a recent similar request:
+  You asked: list the largest 5 files in current dir  (2m0s ago)
+  Command:   du -ah . | sort -rh | head -n 5
+  Reason:    show top 5 biggest files by size
+
+? What would you like to do?  [Use arrows to move, enter to select]
+> Run cached command
+  Send to LLM again
+  Abort
+```
+
+- **Run cached command** — executes immediately, no LLM round-trip.
+- **Send to LLM again** — falls through to the normal flow if the cached command isn't quite right.
+- **Abort** — cancel and exit.
+
+For destructive commands the first option becomes `Yes, run cached (destructive)` and a red warning is shown.
+
+### How the lookup works
+
+1. Loads `~/.config/shellai/history.json` (the same file used by `shellai history`).
+2. Filters entries that:
+   - actually executed,
+   - exited cleanly (`exit_code <= 1` — `1` is treated as "no results", consistent with how grep / lsof report misses),
+   - happened within `cache_ttl` (default 30 minutes).
+3. For each remaining entry, normalizes both intents (lowercase, split on whitespace) and computes **Jaccard similarity** — the fraction of shared tokens over total unique tokens.
+4. Picks the entry with the highest score, requiring `>= 0.6` to count as a match. Ties go to the most recent run.
+
+Because the cache is just a view over `history.json`, it persists across shell sessions and survives reboots. There is no separate cache file. To invalidate, delete history (`shellai clear`) or wait for the TTL to expire.
+
+Tune the window to your workflow:
+
+```bash
+shellai set cache_ttl 5m    # short-lived, only catches back-to-back retries
+shellai set cache_ttl 2h    # longer memory across a work session
+```
+
+---
+
 ## How It Works
 
 1. Detects your environment (OS, distro, shell, package manager, working directory)
-2. Sends that context + your intent to the local LLM
-3. Parses the JSON response `{"command": "...", "reason": "..."}`
-4. Runs safety checks (destructive patterns, package manager mismatch)
-5. Shows the command + asks for confirmation
-6. Executes and logs to `~/.config/shellai/history.json`
+2. Looks up recent history for a similar prior intent — if found, prompts to reuse it (skipping the LLM)
+3. Sends environment + intent to the local LLM
+4. Parses the JSON response `{"command": "...", "reason": "..."}`
+5. Runs safety checks (destructive patterns, package manager mismatch)
+6. Shows the command + asks for confirmation
+7. Executes and logs to `~/.config/shellai/history.json`
 
 > [!NOTE]
 > The responses you get from running these commands will be very dependant on the model you are running. The better model you run, the better and more accurate commands you are going to get.

@@ -14,6 +14,7 @@ type Config struct {
 	Model    string        `yaml:"model"`
 	Endpoint string        `yaml:"endpoint"`
 	Timeout  time.Duration `yaml:"timeout"`
+	CacheTTL time.Duration `yaml:"cache_ttl"`
 }
 
 func DefaultPath() string {
@@ -26,6 +27,7 @@ func defaults() *Config {
 		Provider: "ollama",
 		Endpoint: "http://localhost:11434",
 		Timeout:  60 * time.Second,
+		CacheTTL: 30 * time.Minute,
 	}
 }
 
@@ -58,6 +60,9 @@ func Load(path string) (*Config, error) {
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 60 * time.Second
 	}
+	if cfg.CacheTTL == 0 {
+		cfg.CacheTTL = 30 * time.Minute
+	}
 
 	return cfg, nil
 }
@@ -86,6 +91,12 @@ func SetField(path, key, val string) error {
 		cfg.Model = val
 	case "endpoint":
 		cfg.Endpoint = val
+	case "cache_ttl":
+		d, err := time.ParseDuration(val)
+		if err != nil {
+			return fmt.Errorf("invalid cache_ttl %q: %w", val, err)
+		}
+		cfg.CacheTTL = d
 	default:
 		return fmt.Errorf("unknown config key: %s", key)
 	}
